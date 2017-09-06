@@ -26,13 +26,15 @@ workflow Propagate-Billing-Fields
         foreach($tag in $tags.GetEnumerator()){
             $key = $tag.Name
             $value = $tag.Value
-            Write-Output $key
+
             if($PolicyTags.Contains($key)){
-                $createdPolicies += New-AzureRmPolicyAssignment -Name ("append"+$key+"tag") -PolicyDefinition $appendpolicy -Scope $resourceGroup.ResourceId -tagName $key -tagValue  $value
-                $createdPolicies += New-AzureRmPolicyAssignment -Name ("denywithout"+$key+"tag") -PolicyDefinition $denypolicy -Scope $resourceGroup.ResourceId -tagName $key -tagValue  $value
+                $createdPolicies += New-AzureRmPolicyAssignment -Name ("append"+$key+"tag") -PolicyDefinition $appendpolicy -Scope $resourceGroup.ResourceId `
+                    -PolicyParameterObject @{tagName=$key;tagValue=$value}
+                $createdPolicies += New-AzureRmPolicyAssignment -Name ("denywithout"+$key+"tag") -PolicyDefinition $denypolicy -Scope $resourceGroup.ResourceId `
+                    -PolicyParameterObject @{tagName=$key;tagValue=$value}
                 Write-Output "[SUCCESS] Persisting Tag $key = $value on ResourceGroup $resourceGroup"
             }else{
-                Write-Output "[IGNORE] $key is not part of the PersistentTags. Ignoring. $value"
+                Write-Output "[IGNORE] $key is not part of the PersistentTags"
             }
         }
     }
